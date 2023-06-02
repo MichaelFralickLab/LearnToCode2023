@@ -1,0 +1,98 @@
+---
+title: "Seminar I: Visualizations"
+subtitle: "Learn to Code 2023"
+author: "Jason Moggridge"
+format: 
+   revealjs:
+     theme: [default, 'custom.scss']
+     embed-resources: true
+execute: 
+  echo: true
+  message: false
+---
+
+## Super Hasty R Introduction
+
+**Why R?**
+
+<hr>
+
+::: incremental
+-   Free & open source software
+
+-   Statistics & visualization built in
+
+-   Packages for everything else
+
+-   Active development community
+
+-   A high-level, multi-paradigm, dynamically-typed language
+:::
+
+## ggplot2
+
+<hr/>
+
+This session focuses on the popular `ggplot2` package for creating visualizations in the R language.
+
+::: incremental
+
+- ggplot2 basics
+  - geom & aesthetics
+  - scales, labels, theme
+  - facets
+- extensions
+- adding interactivity
+
+:::
+
+## Why ggplot2?
+
+**rather than base R plots**
+<hr/>
+
+- Easier to learn
+- Composable
+- Extensible
+- Good documentation: [https://ggplot2.tidyverse.org/](https://ggplot2.tidyverse.org/)
+
+## Grammar of graphics
+
+<hr/>
+
+> A theory about the structure of data visualizations.
+
+Graphics are defined in terms of their:
+
+
+:::: {.columns}
+
+::: {.column width="50%"}
+- data
+- statistics
+- aesthetic mapping
+- geometries
+- facets
+:::
+
+::: {.column width="50%"}
+- scales
+- coordinates
+- labels
+- theme
+:::
+
+::::
+
+## Let's go
+
+<hr/>
+
+```{r eval=F}
+# do this once
+install.packages("tidyverse")
+```
+
+
+## More Resources
+
