@@ -13,21 +13,27 @@ execute:
 
 ## Super Hasty R Introduction
 
-**Why R?**
+**What is R?**
 
 <hr>
 
-::: incremental
+<div>
+
+-   Interpreted, dynamically-typed language
+
 -   Free & open source software
 
--   Statistics & visualization built in
+-   Built-ins
 
--   Packages for everything else
+-   Packages
 
--   Active development community
+-   Supportive community
 
--   A high-level, multi-paradigm, dynamically-typed language
-:::
+</div>
+
+## Community
+
+![](public/message%20from%20god.png){fig-align="center" width="402"}
 
 ## ggplot2
 
@@ -36,25 +42,49 @@ execute:
 This session focuses on the popular `ggplot2` package for creating visualizations in the R language.
 
 ::: incremental
-
-- ggplot2 basics
-  - geom & aesthetics
-  - scales, labels, theme
-  - facets
-- extensions
-- adding interactivity
-
+-   ggplot2 basics
+    -   geom & aesthetics
+    -   scales, labels, theme
+    -   facets
+-   extensions
+-   adding interactivity
 :::
 
 ## Why ggplot2?
 
-**rather than base R plots**
 <hr/>
 
-- Easier to learn
-- Composable
-- Extensible
-- Good documentation: [https://ggplot2.tidyverse.org/](https://ggplot2.tidyverse.org/)
+-   Easier to learn
+-   Composible
+-   Extensible
+-   Good documentation: <https://ggplot2.tidyverse.org/>
+
+## Let's go
+
+<hr/>
+
+```{r eval=F}
+# do this once
+install.packages(
+  c('tidyverse', 'janitor',
+    'ggrepel', 'ggbeeswarm',
+    'patchwork', 'medicaldata' 
+    )
+)
+```
+
+## More Resources
+
+<hr/>
+
+[**ggplot2 documentation**: https://ggplot2.tidyverse.org/](https://ggplot2.tidyverse.org/)
+  
+[**Cheatsheet**: https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf](https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf)
+  
+[**R4DS**: https://r4ds.had.co.nz](https://r4ds.had.co.nz)
+  
+[**ggplot2 book**: https://ggplot2-book.org/](https://ggplot2-book.org/)
+  
 
 ## Grammar of graphics
 
@@ -64,35 +94,19 @@ This session focuses on the popular `ggplot2` package for creating visualization
 
 Graphics are defined in terms of their:
 
-
-:::: {.columns}
-
+::: columns
 ::: {.column width="50%"}
-- data
-- statistics
-- aesthetic mapping
-- geometries
-- facets
+-   data
+-   statistics
+-   aesthetic mapping
+-   geometries
+-   facets
 :::
 
 ::: {.column width="50%"}
-- scales
-- coordinates
-- labels
-- theme
+-   scales
+-   coordinates
+-   labels
+-   theme
 :::
-
-::::
-
-## Let's go
-
-<hr/>
-
-```{r eval=F}
-# do this once
-install.packages("tidyverse")
-```
-
-
-## More Resources
-
+:::

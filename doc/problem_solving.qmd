@@ -1,0 +1,108 @@
+---
+title: "Learn To Code: Problem Solving"
+author: "Jason Moggridge"
+institute: "LTRI"
+date: '2023-06-01'
+format: 
+  revealjs:
+    theme: 'default'
+---
+
+## Learn *to* code
+
+
+#### Seeing others do it
+
+- You can (and should) *learn about* programming through books, docs, blogposts, *etc*.
+
+#### Doing it yourself
+
+- But, the best way to *learn to* program is through practice and **problem solving**.
+
+<!-- ## Resources -->
+
+<!-- There are too many possible examples to show you but I suggest that you find something that motivates you beyond just 'learning to code' -->
+
+<!-- <br> -->
+
+<!-- > Find something where the subject matter matches your goals. -->
+
+## The best problem-sets are:
+
+- approachable
+- language agnostic
+- interesting
+- popular
+
+
+## A couple sites to show you today
+
+- Advent of Code
+- Hanukkah of Data
+- Rosalind
+- Kaggle
+
+## Databases / Querying: Hannukah of Data
+
+[**Hannukah of Data**](https://hanukkah.bluebird.sh/5783/) is a new annual set of problems relating to querying databases and doing fairly straightforward data manipulation.
+
+
+## Databases / Querying: Hannukah of Data
+
+**Setup**   
+
+- ⬇️ download data   
+- 👨🏽‍💻 create an in-memory database   
+- 👍 write queries to select data   
+- 🤏 manipulate data and filter rows   
+- ✅  find a single customer to solve each problem  
+
+## Example
+
+
+## Bioinformatics: Rosalind
+
+[**Rosalind**](https://rosalind.info)
+
+Solve problems relating to molecular biology: DNA and protein sequencing, sequence alignment, genome assembly, phylogeny, algorithms for classification and clustering,  etc. 
+
+## Simple example
+
+https://rosalind.info/problems/dna/
+
+Given: A DNA string s
+ of length at most 1000 nt.
+ 
+ Return: Four integers (separated by spaces) counting the respective number of times that the symbols 'A', 'C', 'G', and 'T' occur in s
+.
+
+
+## Imperative solution
+
+```{r}
+#| echo: true
+dna <- 'AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC' |> 
+  strsplit('') |>
+  unlist()
+
+counts <- c(A = 0, C = 0, G = 0, T = 0)
+for (base in dna) {
+  counts[base] <- counts[base] + 1
+}
+
+print(counts)
+```
+
+
+## Functional solution 
+
+```{r}
+#| echo: true
+library(tidyverse)
+
+dna <- 'AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC'
+
+lst('A','C','G','T') |> 
+  set_names() |>
+  map_dbl(~str_count(dna, pattern = .))
+```
