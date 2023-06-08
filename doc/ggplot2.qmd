@@ -11,6 +11,14 @@ execute:
   message: false
 ---
 
+## Hi 👋, I'm Jason
+
+- BSc. Biochem, Carleton
+- M. Bioinformatics, Guelph
+- Coding since ~2016, R since ~2019.
+- Very excited to talk about R!
+
+
 ## Super Hasty R Introduction
 
 **What is R?**
@@ -23,9 +31,9 @@ execute:
 
 -   Free & open source software
 
--   Built-ins
+-   Powerful built-ins
 
--   Packages
+-   Healthy package ecosystem
 
 -   Supportive community
 
@@ -33,7 +41,9 @@ execute:
 
 ## Community
 
-![](public/message%20from%20god.png){fig-align="center" width="402"}
+---- 
+
+![](public/message%20from%20god.png){fig-align="center" width="502"}
 
 ## ggplot2
 
@@ -66,9 +76,9 @@ This session focuses on the popular `ggplot2` package for creating visualization
 ```{r eval=F}
 # do this once
 install.packages(
-  c('tidyverse', 'janitor',
-    'ggrepel', 'ggbeeswarm',
-    'patchwork', 'medicaldata' 
+  c('tidyverse', 'janitor', 'ggrepel',   
+    'ggiraph', 'plotly', 'patchwork',
+    'scales', 'ggtext', 'medicaldata'
     )
 )
 ```
@@ -86,27 +96,27 @@ install.packages(
 [**ggplot2 book**: https://ggplot2-book.org/](https://ggplot2-book.org/)
   
 
-## Grammar of graphics
+<!-- ## Grammar of graphics -->
 
-<hr/>
+<!-- <hr/> -->
 
-> A theory about the structure of data visualizations.
+<!-- > A theory about the structure of data visualizations. -->
 
-Graphics are defined in terms of their:
+<!-- Graphics are defined in terms of their: -->
 
-::: columns
-::: {.column width="50%"}
--   data
--   statistics
--   aesthetic mapping
--   geometries
--   facets
-:::
+<!-- ::: columns -->
+<!-- ::: {.column width="50%"} -->
+<!-- -   data -->
+<!-- -   statistics -->
+<!-- -   aesthetic mapping -->
+<!-- -   geometries -->
+<!-- -   facets -->
+<!-- ::: -->
 
-::: {.column width="50%"}
--   scales
--   coordinates
--   labels
--   theme
-:::
-:::
+<!-- ::: {.column width="50%"} -->
+<!-- -   scales -->
+<!-- -   coordinates -->
+<!-- -   labels -->
+<!-- -   theme -->
+<!-- ::: -->
+<!-- ::: -->
