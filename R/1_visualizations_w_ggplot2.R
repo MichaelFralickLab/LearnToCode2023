@@ -1,12 +1,18 @@
 # ggplot2_polyps.R -------
 # a quickstart guide to plotting with ggplot2
 
+# Remember there's a cheat sheet to help you!
+# https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf
+
 ## Libraries ------
 
-#' first:
-install.packages(
-  c('tidyverse', 'janitor', 'ggrepel', 'ggbeeswarm', 'patchwork', 'medicaldata', 'scales', )
-  )
+#' first, do this once to install the packages we need:
+# install.packages(
+#   c('tidyverse', 'janitor', 'ggrepel', 'ggbeeswarm',
+#     'patchwork', 'scales', 'ggtext', 'medicaldata')
+#   )
+
+# check out the environment pane... see global...
 
 # use library() to load packages
 library(tidyverse)
@@ -14,13 +20,16 @@ library(janitor)
 library(ggtext)
 library(medicaldata)
 
+
+
 ## Data ----------
 
 # assign data to an obj in the global environment
-polyps <- medicaldata::polyps |>
-  as_tibble()
+polyps <- medicaldata::polyps
 
-polyps |> glimpse()
+# check out the data
+polyps |> str()
+
 
 ## Simple example ------
 
@@ -29,19 +38,34 @@ ggplot(data = polyps, mapping = aes(x = sex)) +
   geom_bar()
 
 # terse
-polyps |> ggplot(aes(sex)) + geom_bar()
+ggplot(polyps, aes(sex)) +
+  geom_bar()
 
-# specify data and aes on individual geom
-ggplot() + geom_bar(data = polyps, aes(sex))
+# or specify data and aes on individual geoms
+ggplot() +
+  geom_bar(data = polyps, aes(x = sex))
+
+
+
+
+#' *do a bar plot for treatment arms: are sample sizes equal?*
+ggplot(data = polyps, mapping = aes(treatment)) +
+  geom_bar()
+
+
+## notes
+# data can be global or specified in layers
+# aes can be global or specified in layers
+# use '+' to add more layers to same canvas
 
 
 ## geom_*s ---------------
 
 # _bar computes a stat (count)
 # alternately compute bar height and use geom_col
-polyps |>
-  count(treatment) |>
-  ggplot(aes(treatment, n)) +
+# polyps |>
+  count(polyps, treatment) |>
+  ggplot(aes(x = treatment, y = n)) +
   geom_col()
 
 # protip: flip groups onto y-axis
@@ -53,47 +77,68 @@ polyps |>
 # default position is 'stack' bar
 polyps |>
   ggplot() +
-  geom_bar(aes(y = treatment, fill = sex))
+  geom_bar(aes(y = treatment, fill = sex),
+           position = 'stack')
 
 # position argument changes geom appearance
 polyps |>
   ggplot() +
-  geom_bar(aes(fill = sex, y = treatment),
+  geom_bar(aes(y = treatment, fill = sex),
            position = 'dodge')
 
-## Histogram, other distributions
+# stack & normalize total to 1
 polyps |>
-  ggplot(aes(number3m)) +
-  geom_density(aes(color = treatment))
+  ggplot() +
+  geom_bar(aes(y = treatment, fill = sex),
+           position = 'fill')
 
+
+
+## Histogram, other distributions
+
+# histo
 polyps |>
-  ggplot(aes(number3m)) +
+  ggplot(aes(x = baseline)) +
   geom_histogram(aes(fill = treatment),
                  bins = 10,
                  position = 'stack')
 
+# density
 polyps |>
-  ggplot(aes(number3m)) +
-  geom_dotplot(aes(fill = treatment),
-               method = 'histodot',
-               stackdir = 'down')
-  scale_y_continuous(NULL, breaks = NULL)
+  ggplot(aes(x = baseline)) +
+  geom_density(aes(color = treatment))
+
 
 ## Comparing distributions
 polyps |>
-  ggplot(aes(age, treatment)) +
+  ggplot(aes(baseline, treatment)) +
   geom_boxplot()
 
+# scattered points
 polyps |>
-  ggplot(aes(age, treatment)) +
-  geom_jitter(height = .25)
+  ggplot(aes(baseline, treatment)) +
+  geom_jitter(aes(size = age, color = sex),
+              height = .35,
+              alpha = .5)
 
+# nicer shape with this ggbeeswarm::geom_beeswarm
+# no overlaps!
 polyps |>
-  ggplot(aes(age, treatment)) +
-  ggbeeswarm::geom_quasirandom(groupOnX = F)
+  ggplot(aes(baseline, treatment,
+             # color = sex,
+             # size = age
+             )) +
+  ggbeeswarm::geom_beeswarm(
+    alpha = .81,
+    cex = 5,
+    show.legend = F
+  )
 
 
 ## Scatterplots -----
+
+# examine corr between baseline & 3mo timepoint
+# stratify by sex...
 p <-
   polyps |>
   ggplot(aes(
@@ -108,13 +153,25 @@ p <-
              size = 2.5) +
   geom_smooth(method = 'lm',
               formula = 'y ~ x',
+              linewidth = .25,
               alpha = .2)
 
+#
+p
 print(p)
 
-## stat_* ------
+# SCALES ---------------
+
+# alter aesthetic mappings
+p +
+  scale_color_viridis_d(begin = .2, end = .7) +
+  scale_fill_viridis_d(begin = .2, end = .7) +
+  scale_y_log10() +
+  scale_x_log10()
 
 # LABS ---------------
+
+# add labs() to pretty it up
 p <- p +
   labs(
     x = 'Polyps at Baseline (n)',
@@ -125,30 +182,6 @@ p <- p +
   )
 print(p)
 
-# SCALES ---------------
-# alter aesthetic mappings
-p +
-  scale_color_viridis_d(begin = .2, end = .7) +
-  scale_fill_viridis_d(begin = .2, end = .7) +
-  scale_y_log10() +
-  scale_x_log10()
-
-
-# COORDS ---------------
-# circular plots with polar coords
-tibble(
-  # simulate data
-  x = sample(x = 1:12, size = 100, replace = T),
-  y = rpois(n = 100, lambda = 20),
-  z = sample(c(T, F), 100, replace = T)
-) |>
-  ggplot(aes(x, y, fill = z)) +
-  coord_polar() +
-  geom_col() +
-  scale_x_continuous(
-    breaks = scales::pretty_breaks(),
-    limits = c(0, 12)
-    )
 
 
 # FACETS ---------------
@@ -158,10 +191,18 @@ polyps_long <-
   select(where(is.numeric)) |>
   pivot_longer(everything())
 
-polyps_long |>
+a <- polyps_long |>
   ggplot(aes(value)) +
   geom_histogram(bins = 10, na.rm = T) +
-  facet_grid(~name, scales = 'free')
+  facet_wrap(~name, scales = 'free_x') +
+  scale_y_continuous(breaks = scales::pretty_breaks())
+
+a
+
+# Patchwork ------
+
+a + p
+
 
 # THEME ---------------
 
@@ -181,7 +222,9 @@ p + theme(
     hjust = 1,
     vjust = 1
   ),
-  axis.title = element_text(family = 'Tourney')
+  axis.title = element_text(family = 'Tourney'),
+  plot.title = element_text(family = 'Papyrus'),
+  plot.subtitle = element_text(family = 'Wingdings')
 )
 
 # can add multiple theme_*, eg. a preset + custom
@@ -203,7 +246,16 @@ print(p)
 theme_set(theme_bw())
 
 
-## Recap
+
+# Save to file -------
+
+ggsave('filename_goes_here.png', plot = p, device = 'png')
+ggsave('filename_goes_here.pdf', plot = p, device = 'pdf')
+ggsave('filename_goes_here.svg', plot = p, device = 'svg')
+
+
+
+## Recap/extend: a more complex example
 
 polyps_by_timept <-
   polyps |>
@@ -219,8 +271,8 @@ polyps_by_timept <-
     ) |>
   filter(!is.na(polyps))
 
-polyps_by_timept |>
-  ggplot(aes(time, polyps)) +
+fig <- polyps_by_timept |>
+  ggplot(aes(fct_rev(time), polyps)) +
   ggbeeswarm::geom_quasirandom(
     aes(color = sex),
     width = .20,
@@ -236,7 +288,7 @@ polyps_by_timept |>
     position = position_dodge(width = .5),
     fun.args = list(conf.int = .95)
   ) +
-  facet_wrap(~treatment, ncol = 2) +
+  facet_wrap(~treatment, ncol = 1) +
   rcartocolor::scale_color_carto_d() +
   scale_y_log10() +
   labs(
@@ -245,7 +297,7 @@ polyps_by_timept |>
     color = 'Sex',
     title = 'RCT of Sulindac for Polyp Prevention in <br/> Familial Adenomatous Polyposis',
     subtitle = 'Pointranges show group mean and 95% CI',
-    caption = 'from <em>medicaldata::polyps</em>'
+    caption = 'Source: *medicaldata::polyps*'
   ) +
   theme(
     plot.title = ggtext::element_markdown(
@@ -264,5 +316,45 @@ polyps_by_timept |>
     strip.text = element_markdown(
       margin = unit(c(0,0,0,0), 'mm'),
       hjust = 0, size = 8, face = 'bold')
-  )
 
+  ) +
+  coord_flip()
+
+fig
+
+
+## Stats ----
+
+# a duality between stats & geoms
+
+# same as a barplot
+ggplot(polyps, aes(y = sex)) + stat_count()
+
+# other styles available
+ggplot(polyps, aes(x = baseline, color = sex)) +
+  stat_ecdf()
+
+
+# I'm not a huge fan of stat_*; prefer to compute results separately, beforehand, in my data-handling steps where possible...
+
+
+
+
+
+# COORDS ---------------
+
+# not used too often but you can, eg.
+# circular plots with coord_polar()
+tibble(
+  # simulate data
+  x = sample(x = 1:12, size = 100, replace = T),
+  y = rpois(n = 100, lambda = 20),
+  z = sample(c(T, F), 100, replace = T)
+) |>
+  ggplot(aes(x, y, fill = z)) +
+  coord_polar() +
+  geom_col() +
+  scale_x_continuous(
+    breaks = scales::pretty_breaks(),
+    limits = c(0, 12)
+  )

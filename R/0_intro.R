@@ -18,7 +18,7 @@ anscombe_long |>
   group_by(dataset) |>
   summarise(across(
     .cols = c(x,y),
-    .fns = list(mean = mean, sd = sd, min = min, max = max)
+    .fns = list(mean = mean, sd = sd)
     )
   )
 
@@ -26,3 +26,4 @@ anscombe_long |>
   ggplot(aes(x, y)) +
   geom_point() +
   facet_wrap(~dataset)
+

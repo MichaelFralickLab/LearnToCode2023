@@ -3,7 +3,7 @@ library(tidyverse)
 
 reset_script <- function(file, outfile){
   readLines(file) |>
-    map_chr(~str_detect(., '^#') |> if_else(., '\n')) |>
+    map_chr(~if_else(str_detect(., '^#'), ., '\n')) |>
     write_lines(outfile)
 }
 

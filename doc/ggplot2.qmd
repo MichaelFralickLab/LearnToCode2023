@@ -81,7 +81,7 @@ install.packages(
   
 [**Cheatsheet**: https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf](https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf)
   
-[**R4DS**: https://r4ds.had.co.nz](https://r4ds.had.co.nz)
+[**R for Data Science** : https://r4ds.had.co.nz](https://r4ds.had.co.nz) 👌
   
 [**ggplot2 book**: https://ggplot2-book.org/](https://ggplot2-book.org/)
   
