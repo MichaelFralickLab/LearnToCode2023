@@ -29,33 +29,21 @@ library(medicaldata)
 polyps <- medicaldata::polyps
 
 # check out the data
-polyps |> str()
-
 
 ## Simple examples & syntax explanation ------
 
-ggplot(data = polyps,
-       mapping = aes(x = age,
-                     y = baseline)
-       ) +
-  geom_point()
-
-
 # verbose
-ggplot(data = polyps, mapping = aes(x = sex)) +
-  geom_bar()
-
 # terse
-polyps |>
-  ggplot(aes(sex)) +
-  geom_bar()
-
 # or specify data and aes on individual geoms
-ggplot() +
-  geom_bar(data = polyps, aes(sex))
+
+
+
+
 
 
 #' *Do a quick bar plot showing randomization to each treatment arm. Are sample sizes equal?*
+
+
 
 
 ## notes
@@ -67,71 +55,32 @@ ggplot() +
 ## geom_*s & aes---------------
 
 # protip: flip groups onto y-axis for legibility
-starwars |>
-  ggplot(aes(x = species)) +
-  geom_bar()
 
-starwars |>
-  ggplot(aes(y = fct_rev(species))) +
-  geom_bar()
+# add colour for 2nd discrete variable
 
+# modify static geom_ level properties
 
-# add colouring for 2nd set of categories
 # one geom - different 'position' adjutsments
-polyps |>
-  ggplot() +
-  geom_bar(
-    aes(y = treatment, fill = sex),
-    # position => stack, fill, dodge, ...
-    position = 'dodge'
-  )
-
-# _bar computes a stat (count)
-# alternately compute bar height and use geom_col
-polyps |>
-  count(treatment) |>
-  ggplot(aes(x = treatment, y = n)) +
-  geom_col()
+# position = 'stack' | 'fill' | 'dodge'
 
 
-# Continuous Distributions... lets' examine `baseline`
+# already have bar height? use geom_col instead
 
-# histograms
-polyps |>
-  ggplot(aes(x = baseline)) +
-  geom_histogram(aes(fill = treatment),
-                 bins = 10,
-                 position = 'stack')
+
+# Continuous Distributions... lets' examine `baseline`...
+
+# histogram, bins
 
 # density lines
-polyps |>
-  ggplot(aes(x = baseline)) +
-  geom_density(aes(color = treatment))
 
 # boxplots
-polyps |>
-  ggplot(aes(baseline, treatment)) +
-  geom_boxplot()
 
-# scattered points
-polyps |>
-  ggplot(aes(baseline, treatment)) +
-  geom_jitter(aes(size = age, color = sex),
-              height = .35,
-              alpha = .5)
+# jitter
+
+
 
 # nicer shape with this ggbeeswarm::geom_beeswarm
 # less overplotting!
-polyps |>
-  ggplot(aes(baseline, treatment,
-             color = sex,
-             size = age
-             )) +
-  ggbeeswarm::geom_beeswarm(
-    alpha = .5,
-    cex = 5,
-    show.legend = F
-  )
 
 
 
@@ -139,29 +88,7 @@ polyps |>
 
 # examine corr between baseline & 3mo timepoint
 # stratify by sex...
-p <-
-  polyps |>
-  ggplot(aes(
-    x = baseline,
-    y = number3m,
-    color = sex,
-    fill = sex
-  )) +
-  geom_point(
-    aes(size = age),
-    # see cheat sheet
-    shape = 1,
-    # transparency range 0-1
-    alpha = .76
-  ) +
-  # add a linear fit (lm)
-  geom_smooth(method = 'lm',
-              formula = 'y ~ x',
-              linewidth = .25,
-              alpha = .2,
-              show.legend = F)
 
-print(p)
 
 
 #' *make this plot look better, add a fit line(s)*
@@ -170,55 +97,25 @@ ggplot2::diamonds |>
   geom_point()
 
 
-#' *make this plot look better*: solved
-ggplot2::diamonds |>
-  ggplot(aes(carat, price, color = cut)) +
-  geom_point(size = .1, shape = 0, alpha = .5) +
-  guides(color = guide_legend(
-    override.aes = list(size = 5, shape = 15, alpha = 1)
-  ))
 
-# SCALES ---------------
+## scale_* ---------------
 
-# alter aesthetic mappings
-p +
-  scale_color_viridis_d(begin = .2, end = .7) +
-  scale_fill_viridis_d(begin = .2, end = .7) +
-  scale_y_log10() +
-  scale_x_log10()
+# transform aesthetic mappings
 
-# LABS ---------------
+## labs ---------------
 
 # add labs() to pretty it up
-p <- p +
-  labs(
-    x = 'Polyps at Baseline (n)',
-    y = 'Polyps at 3 mo (n)',
-    fill = 'Sex', color = 'Sex',
-    title = 'Polyps at 3 months ~ baseline ',
-    subtitle = 'strong positive correlation...'
-  )
 
-print(p)
+
+## facet_* ---------------
+
+# split panels by a discrete variable
 
 
 
-# FACETS ---------------
+## patchwork ------
 
-polyps_long <-
-  polyps |>
-  select(where(is.numeric)) |>
-  pivot_longer(everything())
-
-polyps_long |>
-  ggplot(aes(value)) +
-  geom_histogram(bins = 10, na.rm = T) +
-  facet_wrap(~name, scales = 'free_x') +
-  scale_y_continuous(breaks = scales::pretty_breaks())
-
-
-
-# Patchwork ------
+library(patchwork)
 
 # grab some plots from earlier just to illustrate...
 a <- polyps_long |>
@@ -231,28 +128,27 @@ b <- polyps |>
   ggplot(aes(baseline, treatment)) +
   geom_boxplot()
 
-library(patchwork)
 
-# combine in row
-a | p
-# combine in col
-a / p
 
+# combine in row with '|'
+# combine in column with '/'
 # group together many plots into complex arrangement
-complex_panel <- ((a / p) | (b / a / b))
-
 # add annotations by chaining with '&'
-complex_panel &
-  patchwork::plot_annotation(tag_levels = 'A')
 
 
 
-# THEME ---------------
+
+
+
+
+
+## theme_ ---------------
 
 # easy: use a preset theme_ on individual plot
 p + theme_classic()
 
-# harder: customize theme with theme()
+
+# customize elements with theme()
 p + theme(
   panel.border = element_blank(),
   axis.line = element_line(colour = 'red'),
@@ -276,7 +172,7 @@ theme_set(
   theme_bw() + theme(
     # remove any element w element_blank()
     panel.border = element_blank(),
-    # otherwise use element_* to modify properties
+    # use element_* to modify
     axis.line = element_line(
       colour = 'purple',
       arrow = grid::arrow(
@@ -286,41 +182,40 @@ theme_set(
 
 print(p)
 
+# set a standard theme for all plots
 theme_set(theme_bw())
 
 
 
-# Save to file -------
+## save plots -------
 
-ggsave('filename_goes_here.png', plot = p, device = 'png')
-ggsave('filename_goes_here.pdf', plot = p, device = 'pdf')
-ggsave('filename_goes_here.svg', plot = p, device = 'svg')
 
-## Stats ----
+
+
+## stat_* layers ----
+
+# I'm not a huge fan of stat_*. I prefer to compute results separately, beforehand, in my data-handling steps where possible...
+
 
 # a duality between stats & geoms
-
-# same as a barplot
+# stat_count same as a geom_bar
 ggplot(polyps, aes(y = sex)) + stat_count()
 
-# other styles available
+# other styles available with stat...
 ggplot(polyps, aes(x = baseline, color = sex)) +
   stat_ecdf()
 
 
-# I'm not a huge fan of stat_*; prefer to compute results separately, beforehand, in my data-handling steps where possible...
 
 
 
-
-
-## COORDS ---------
+## coordinate systems ----
 
 # not used too often but you can, eg.
 # circular plots with coord_polar()
 tibble(
   # simulate data
-  x = sample(x = 1:12, size = 100, replace = T),
+  x = sample(x = 1:24, size = 100, replace = T),
   y = rpois(n = 100, lambda = 20),
   z = sample(c(T, F), 100, replace = T)
 ) |>
@@ -329,7 +224,7 @@ tibble(
   geom_col() +
   scale_x_continuous(
     breaks = scales::pretty_breaks(),
-    limits = c(0, 12)
+    limits = c(0, 24)
   )
 
 
@@ -347,8 +242,7 @@ polyps_by_timept <-
     time = str_remove(time, 'number') |>
       factor(levels = c('baseline', '3m', '12m')),
     across(c(treatment, sex), str_to_title)
-    ) |>
-  filter(!is.na(polyps))
+  )
 
 # publication-quality example with bells + whistles
 fig <- polyps_by_timept |>
@@ -358,15 +252,17 @@ fig <- polyps_by_timept |>
     width = .20,
     shape = 1,
     dodge.width = .5,
-    size = .8
-    ) +
+    size = .8,
+    na.rm = T
+  ) +
   stat_summary(
     fun.data = mean_cl_boot,
     mapping = aes(color = sex),
     alpha = .5,
     geom = "pointrange",
     position = position_dodge(width = .5),
-    fun.args = list(conf.int = .95)
+    fun.args = list(conf.int = .95),
+    na.rm = T
   ) +
   facet_wrap(~treatment, ncol = 1) +
   rcartocolor::scale_color_carto_d() +
@@ -379,6 +275,7 @@ fig <- polyps_by_timept |>
     subtitle = 'Pointranges show group mean and 95% CI',
     caption = 'Source: *medicaldata::polyps*'
   ) +
+  theme_light() +
   theme(
     plot.title = ggtext::element_markdown(
       padding = unit(x = c(0,0,0,0), units = 'mm'),
@@ -390,52 +287,49 @@ fig <- polyps_by_timept |>
       face = 'italic',
       family = 'Roboto',
       size = 9
-      ),
+    ),
     plot.caption = ggtext::element_markdown(),
     strip.background = element_blank(),
     strip.text = element_markdown(
+      color = 'gray40',
+      size = 9,
       margin = unit(c(0,0,0,0), 'mm'),
-      hjust = 0, size = 8, face = 'bold')
-
+      hjust = 0,
+      face = 'bold'
+    )
   ) +
   coord_flip()
 
 print(fig)
 
 
+## Interactivity ----
 
+# adding a tooltip for more info
+library(ggiraph)
+(polyps |>
+    ggplot(aes(sex, baseline, color = age)) +
+    geom_jitter_interactive(
+      aes(tooltip = participant_id)
+    )
+) |> ggiraph::ggiraph(ggobj = _)
 
-## Programming with ggplot2 : preview ----
+library(plotly)
+(polyps |>
+    ggplot(aes(sex, baseline,
+               color = age,
+               label = participant_id)) +
+    geom_jitter()
+) |> plotly::ggplotly()
 
-# plot barplot in a given 'position'
-my_barplot_fn <- function(position_arg) {
-  polyps |>
-    ggplot() +
-    geom_bar(aes(y = treatment, fill = sex),
-             position = position_arg) +
-    labs(title = paste('Position:', position_arg))
-}
-
-# for each position, create the barplot
-map(
-  .x = c('stack', 'fill', 'dodge'),
-  .f = my_barplot_fn
-) |>
-  # combine the list of barplots into a single panel
-  patchwork::wrap_plots(ncol = 1, guides = 'collect')
-
-
-
-
-
-## Animations
+## Animations ----
 
 # animations are fun and easy too
 # https://gganimate.com/index.html
 
 library(gganimate)
 
-animated <-
+polyps_long <-
   polyps |>
   pivot_longer(
     cols = c(baseline, number3m, number12m),
@@ -446,7 +340,10 @@ animated <-
     timepoint = timepoint |>
       str_remove('number') |>
       factor(levels = c('baseline', '3m', '12m'))
-  ) |>
+  )
+
+animate_this <-
+  polyps_long |>
   # plot all phases together
   ggplot(aes(
     polyps, treatment,
@@ -459,7 +356,7 @@ animated <-
     position = position_dodge(width = .4)
   ) +
   ggbeeswarm::geom_beeswarm(
-    cex = 2,
+    cex = 3,
     size = 2,
     shape = 1,
     alpha = .74,
@@ -473,18 +370,21 @@ animated <-
     y = 'Arm',
     color = 'Sex',
     fill = 'Sex',
-    ) +
+  ) +
   theme_minimal() +
   theme(
     text = element_text(size = 10),
     plot.title = element_markdown(face = 'bold'),
-    ) +
-  # then split into an animation on some variable
+  )
+
+
+# then split into an animation on some variable
+animated <- animate_this +
   gganimate::transition_states(timepoint,
                                transition_length = 2,
                                state_length = 2) +
   gganimate::shadow_wake(wake_length = 0.1) +
-  gganimate::ease_aes(x = 'cubic-in-out')
+  gganimate::ease_aes('cubic-in-out')
 
 gganimate::animate(animated,
                    height = 4, width = 4,
@@ -494,6 +394,26 @@ gganimate::animate(animated,
 # save last animation
 gganimate::anim_save('sulindac_animation.gif')
 
+
+
+## Programming with ggplot2 : preview ----
+
+# plot a barplot with a given 'position' argument
+my_barplot_fn <- function(position_arg) {
+  polyps |>
+    ggplot() +
+    geom_bar(aes(y = treatment, fill = sex),
+             position = position_arg) +
+    labs(title = paste('Position:', position_arg))
+}
+
+# for each position, create a barplot
+map(
+  .x = c('stack', 'fill', 'dodge'),
+  .f = my_barplot_fn
+) |>
+  # combine the list of barplots into a single panel
+  patchwork::wrap_plots(ncol = 1, guides = 'collect')
 
 
 
