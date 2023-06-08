@@ -40,6 +40,7 @@ ggplot(data = polyps,
        ) +
   geom_point()
 
+# there are 3 functions ^ to learn here! ggplot, aes, geom_*
 
 # verbose
 ggplot(data = polyps, mapping = aes(x = sex)) +
