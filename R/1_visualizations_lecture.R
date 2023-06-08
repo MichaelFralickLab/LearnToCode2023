@@ -4,6 +4,7 @@
 # Remember there's a cheat sheet to help you!
 # https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf
 
+# EDITOR > CONSOLE > ENVIRONMENT *
 
 ## Libraries ------
 
@@ -25,10 +26,14 @@ library(medicaldata)
 
 ## Data ----------
 
+# name <- expression
+
 # assign data to an obj in the global environment
 polyps <- medicaldata::polyps
 
 # check out the data
+polyps |> str()
+
 
 ## Simple examples & syntax explanation ------
 
@@ -36,15 +41,36 @@ polyps <- medicaldata::polyps
 # terse
 # or specify data and aes on individual geoms
 
+ggplot(
+  data = polyps,
+  mapping = aes(x = age, y = baseline)
+  ) +
+  geom_point()
 
 
+ggplot(
+  data = polyps,
+  mapping = aes(y = sex)
+) +
+  geom_bar()
 
 
 
 #' *Do a quick bar plot showing randomization to each treatment arm. Are sample sizes equal?*
 
+# verbose
+ggplot(
+  data = polyps,
+  mapping = aes(x = treatment)
+) +
+  geom_bar()
+
+# terse
+ggplot(polyps, aes(treatment)) + geom_bar()
 
 
+ggplot(data = polyps, aes(treatment)) +
+  geom_bar()
 
 ## notes
 # data can be across all geom_*s or specified w/in a geom_* layer
@@ -55,61 +81,131 @@ polyps <- medicaldata::polyps
 ## geom_*s & aes---------------
 
 # protip: flip groups onto y-axis for legibility
+ggplot(data = polyps, aes(y = treatment)) +
+  geom_bar()
+
+starwars |>
+  ggplot(aes(y = species)) +
+  geom_bar()
+
 
 # add colour for 2nd discrete variable
+# protip: flip groups onto y-axis for legibility
+ggplot(data = polyps,
+       aes(y = treatment, fill = sex)) +
+  geom_bar()
 
-# modify static geom_ level properties
 
-# one geom - different 'position' adjutsments
+
+
+
+# one geom_* - different 'position' adjustments
 # position = 'stack' | 'fill' | 'dodge'
+# modify static geom_ level properties
+ggplot(data = polyps,
+       aes(y = treatment, fill = sex)) +
+  geom_bar(position = 'dodge')
 
-
-# already have bar height? use geom_col instead
 
 
 # Continuous Distributions... lets' examine `baseline`...
 
 # histogram, bins
+ggplot(data = polyps, aes(x = age)) +
+  geom_histogram(bins = 10, color = 'white')
+
 
 # density lines
+ggplot(data = polyps, aes(x = age, color = treatment)) +
+  geom_density()
 
 # boxplots
 
+ggplot(data = polyps, aes(
+  x = age,
+  y = treatment,
+  color = treatment)) +
+  geom_boxplot()
+
+
 # jitter
 
+ggplot(data = polyps, aes(
+  x = baseline,
+  y = treatment,
+  color = treatment)
+  ) +
+  geom_jitter()
 
 
 # nicer shape with this ggbeeswarm::geom_beeswarm
 # less overplotting!
+ggplot(data = polyps, aes(
+  x = baseline,
+  y = treatment,
+  color = treatment)
+) +
+  geom_boxplot(position = position_nudge(y = .5),
+               width = .25) +
+  ggbeeswarm::geom_beeswarm(cex = 4)
 
 
 
 ## Adjusting aesthetics -----
 
-# examine corr between baseline & 3mo timepoint
+# examine correlation between baseline & 3mo timepoint
 # stratify by sex...
+
+ggplot(polyps, aes(baseline, number3m,
+                   fill = sex,
+                   color = sex)) +
+  geom_point(size = .5, shape = 1) +
+  geom_smooth(method = 'lm', alpha = .2) +
+  scale_x_log10() +
+  scale_y_log10()
+
+
 
 
 
 #' *make this plot look better, add a fit line(s)*
 ggplot2::diamonds |>
-  ggplot(aes(carat, price)) +
-  geom_point()
+  ggplot(aes(carat, price, color = cut)) +
+  geom_point(size = .15, alpha = .15)
 
 
 
 ## scale_* ---------------
 
 # transform aesthetic mappings
+ggplot2::diamonds |>
+  ggplot(aes(carat, price, color = cut)) +
+  geom_point(size = .15, alpha = .15) +
+  scale_color_viridis_d(option = 'B')
+
 
 ## labs ---------------
 
 # add labs() to pretty it up
+ggplot2::diamonds |>
+  ggplot(aes(carat, price, color = cut)) +
+  geom_point(size = .15, alpha = .15) +
+  scale_color_viridis_d(option = 'B') +
+  labs(title = 'My plot'
+       )
 
 
 ## facet_* ---------------
 
 # split panels by a discrete variable
+ggplot2::diamonds |>
+  ggplot(aes(carat, price, color = cut)) +
+  geom_point(size = .15, alpha = .15) +
+  scale_color_viridis_d(option = 'B') +
+  facet_wrap(~cut) +
+  labs(title = 'My plot'
+  )
+
 
 
 
@@ -118,17 +214,22 @@ ggplot2::diamonds |>
 library(patchwork)
 
 # grab some plots from earlier just to illustrate...
-a <- polyps_long |>
-  ggplot(aes(value)) +
-  geom_histogram(bins = 10, na.rm = T) +
-  facet_wrap(~name, scales = 'free_x') +
-  scale_y_continuous(breaks = scales::pretty_breaks())
+a <- ggplot2::diamonds |>
+  ggplot(aes(carat, price, color = cut)) +
+  geom_point(size = .15, alpha = .15) +
+  scale_color_viridis_d(option = 'B') +
+  facet_wrap(~cut) +
+  labs(title = 'My plot'
+  )
+a
 
 b <- polyps |>
   ggplot(aes(baseline, treatment)) +
   geom_boxplot()
+b
 
-
+(a | (b / a)) &
+  plot_annotation(title = 'Something')
 
 # combine in row with '|'
 # combine in column with '/'
@@ -143,6 +244,32 @@ b <- polyps |>
 
 
 ## theme_ ---------------
+
+# examine corr between baseline & 3mo timepoint
+# stratify by sex...
+p <-
+  polyps |>
+  ggplot(aes(
+    x = baseline,
+    y = number3m,
+    color = sex,
+    fill = sex
+  )) +
+  geom_point(
+    aes(size = age),
+    # see cheat sheet
+    shape = 1,
+    # transparency range 0-1
+    alpha = .76
+  ) +
+  # add a linear fit (lm)
+  geom_smooth(method = 'lm',
+              formula = 'y ~ x',
+              linewidth = .25,
+              alpha = .2,
+              show.legend = F)
+
+print(p)
 
 # easy: use a preset theme_ on individual plot
 p + theme_classic()
@@ -190,6 +317,7 @@ theme_set(theme_bw())
 ## save plots -------
 
 
+ggsave('myplot.png')
 
 
 ## stat_* layers ----

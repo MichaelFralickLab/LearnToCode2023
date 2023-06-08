@@ -95,28 +95,3 @@ install.packages(
   
 [**ggplot2 book**: https://ggplot2-book.org/](https://ggplot2-book.org/)
   
-
-<!-- ## Grammar of graphics -->
-
-<!-- <hr/> -->
-
-<!-- > A theory about the structure of data visualizations. -->
-
-<!-- Graphics are defined in terms of their: -->
-
-<!-- ::: columns -->
-<!-- ::: {.column width="50%"} -->
-<!-- -   data -->
-<!-- -   statistics -->
-<!-- -   aesthetic mapping -->
-<!-- -   geometries -->
-<!-- -   facets -->
-<!-- ::: -->
-
-<!-- ::: {.column width="50%"} -->
-<!-- -   scales -->
-<!-- -   coordinates -->
-<!-- -   labels -->
-<!-- -   theme -->
-<!-- ::: -->
-<!-- ::: -->
