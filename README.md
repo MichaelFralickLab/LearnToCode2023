@@ -15,8 +15,8 @@ This repository contains materials for "Learn To Code 2023" sessions, presented 
   - Create analysis reports with Rmarkdown.
   - Web data: APIs & scraping.
   - Create simple applications with R Shiny.
-  - Turn your code into a package
-  - Functional programming with R and purrr
+  - Functional programming with R and purrr.
+  - Turn your analysis code into a package.
   
 
 

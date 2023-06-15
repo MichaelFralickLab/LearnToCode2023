@@ -1,0 +1,79 @@
+---
+title: "Seminar II: Data handling"
+subtitle: "Learn to Code 2023"
+author: "Jason Moggridge"
+format: 
+   revealjs:
+     theme: [default, 'custom.scss']
+     embed-resources: true
+execute: 
+  echo: true
+  message: false
+---
+
+## Data Handling with Tidyverse
+
+<hr>
+
+Last week, we did data visualizations with `ggplot2`.
+
+This week we'll check out other `tidyverse` packages that help with data wrangling and cleaning.
+
+::: incremental
+-   `dplyr` for transforming tables
+-   `tidyr` for reshaping tables
+-   `purrr` for operations on lists
+-   `readr` for I/O operations
+:::
+
+## What's data
+
+<hr>
+
+**Data** usually refers to some collection of information (values or labels) that describe attributes (variables) of entities (observations)
+
+## Tidy data
+<hr>
+
+![](./public/tidy-1.png){width="900"}
+
+is easy to work with because...
+
+
+::: incremental
+-   each variable is a column,\
+-   each observation is a row,\
+-   and each type of observational unit is a table.
+:::
+
+###### *Reproduced from https://r4ds.had.co.nz* 
+
+
+## Tidyverse API
+
+<hr>
+
+-   dataframe (tibble) is the central data structure.\
+-   data is first argument & output of functions (generally).\
+-   functions are chained with pipes `|>`.\
+
+## Let's go
+
+<hr/>
+
+```{r eval=F}
+# do this once
+install.packages('tidyverse', 'janitor')
+```
+
+## More Resources
+
+<hr/>
+
+[**dplyr documentation**: https://dplyr.tidyverse.org/articles/dplyr.html](https://dplyr.tidyverse.org/articles/dplyr.html)
+
+[**R for Data Science** : https://r4ds.had.co.nz](https://r4ds.had.co.nz) 👌
+
+Posit...
+
+Swirl
