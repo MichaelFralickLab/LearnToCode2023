@@ -1,6 +1,6 @@
-# ---------------------------------------------
+#----------------------------------------------
 # Data Handling with `dplyr` & friends
-# ---------------------------------------------
+#----------------------------------------------
 
 # load core tidyverse
 library(tidyverse)
@@ -14,7 +14,6 @@ class(sw)
 
 # different ways to inspect data
 print(sw)
-# str(sw)
 # glimpse(sw)
 # View(sw)
 
@@ -24,7 +23,8 @@ print(sw)
 # -------------------------
 
 # We'll start with operations on rows, using:
-# `filter`, `arrange`, `slice`, `distinct`
+# `filter`, `arrange`, `slice`, 
+# `distinct`, and `bind_rows`
 
 # `filter` subsets rows passing your conditions
 sw |>
@@ -47,7 +47,7 @@ sw |> slice_head(n = 10)
 sw |> slice_max(mass)
 sw |> slice_sample(n = 10)
 
-# `distinct` remove duplicated rows
+# `distinct` removes duplicated rows
 sw |> distinct(homeworld, species)
 
 # `bind_rows` adds new rows
@@ -68,10 +68,10 @@ sw |>
 # -------------------------
 
 # `select` gets a subset of columns
-sw |> select(name, species)
+sw |> select(name, height, mass)
 
 # use colon to get a range 
-sw |> select(name:sex)
+sw |> select(name:mass)
 
 # tidyselect helpers for picking multiple columns...
 # everything()
@@ -199,122 +199,66 @@ sw |>
   unnest(biggest) |>
   print()
 
-# ------------------------------
-# Reshaping Tables with `tidyr`
-# ------------------------------
 
-# Pivot tables are a very common form of untidy data.
-# They usually have a single variable across multiple columns for the repeated observations on a subject.
 
-example <- tribble(
-  ~name, ~value,
-  'A', 1,
-  'B', 2,
-  'C', 3
+
+
+
+
+# --------------------------------------
+# Advanced: Pivots, Joins, and Nesting
+# --------------------------------------
+
+# Pivots - transpose column names to values (longer)
+#  or values to column names (wider)
+# Joins - link values from two tables based on keys.
+# Nesting - nest multiple values per row in a list col
+
+# `pivot_longer` -> turn column names into values
+# `pivot_wider` -> turn values into column names
+summary_tbl |> 
+  pivot_longer(cols = -sex, names_to = 'variable') |> 
+  pivot_wider(names_from = sex, values_from = value)
+
+# left-join
+patients <- tibble(
+  patient_id = c(LETTERS[1:10], 'ZZ'),
+  doctor_id = c(sample(letters, size = 10, replace = T), NA)
 ) |> 
   print()
 
-wide <- example |> 
-  pivot_wider(names_from = name, 
-              values_from = value) |> 
+doctors <- tibble(doctor_id = letters,
+                  score = rnorm(26))
+
+# want to see what the doctor's score is for each patient...
+patients |> left_join(doctors, by = 'doctor_id')
+
+patients |> 
+  full_join(doctors, by = 'doctor_id') |> 
+  print(n = 50)
+
+doctors |> 
+  anti_join(patients, by = 'doctor_id') |> 
+  print(n = 50)
+
+
+# unnest
+unnested <- sw |> 
+  select(name, films) |> 
+  unnest(films) |> 
   print()
 
-long <- wide |> 
-  pivot_longer(cols = everything(),
-               names_to = 'name',
-               values_to = 'value') |> 
-  print()
+# re-nest
+sw |>   
+  select(name, films) |> 
+  unnest(films) |> 
+  nest(data = films)
 
-
-# pivot_longer useful with pivot tables
-# turn years to single column to tidy
-tribble(
-  ~key, ~'2020', ~'2021', ~'2022',
-  'A', 1, 9, 5,
-  'B', 2, 8, 3,
-  'C', 3, 7, 1
-) |> 
-  pivot_longer(`2020`:`2022`, names_to = 'year')
-
-
-# pivot_wider useful for creating indicators
-# generate an indicator for each starship
-pilots <- sw |> 
-  select(name, starships) |> 
-  unnest(starships, keep_empty = T) |> 
-  mutate(value = T) |> 
-  pivot_wider(names_from = starships, 
-              names_prefix = 'pilot_',
-              values_from = value,
-              values_fill = F,
-              names_repair = 'universal') |> 
-  select(-pilot_NA) |> 
-  glimpse()
-  
-
-# We have `pivot_longer` which takes columns, and reshapes them so that the new ones have either the former names and or the values.
-pilots |> 
-  pivot_longer(contains('pilot'),
-               names_to = 'ship', 
-               ) |> 
-  filter(value) |> 
-  select(-value) |> 
-  mutate(
-    ship = str_remove(ship, 'pilot_') |> 
-      str_replace_all('\\.', ' '))
-
-
-
-
-## Read & Write Common Filetypes ----------------
-
-# read/write common file types
-# readr::write_*
-# readr::read_*
-
-
-
-# read in a file
-
-
-## Worked examples with various forms -----
-
-library(readxl)    # parses excel data
-library(janitor)   # more helpers
-library(rvest)
-
-# Data from `medicaldata`
-# https://cran.r-project.org/web/packages/medicaldata/index.html
-
-
-## Web Scraping ----
-
-# the art of extracting data from html
-# (1) download the html from a url
-# (2) then find the right element to target
-# (3) parse the html into a dataframe (tibble)
-#
-# NB - Don't use 'scraping' in any other context
-# querying a database is not scraping
-
-
-# simple example using rvest
-source_url <- 'https://higgi13425.github.io/medicaldata/#available-messy-datasets-beta'
-
-# get the table with the messy datasets
-datasets <-
-  # read the webpage into R
-  rvest::read_html(source_url) |>
-  # extract all tables from html
-  rvest::html_nodes('table') |>
-  # take the second table from the list
-  purrr::pluck(2) |>
-  # parse the table into a dataframe
-  rvest::html_table() |>
-  # clean those names so no spaces
-  janitor::clean_names() |>
-  # all done
-  glimpse()
+sw |>   
+  select(name, films) |> 
+  unnest(films) |> 
+  group_by(name) |> 
+  summarise(films = list(films))
 
 
 
@@ -322,43 +266,14 @@ datasets <-
 
 
 
-## Filesystem -----
 
-# R code uses file paths relative to the current
-# working directory (wherever you opened Rstudio).
-# Find out where your working directory is with:
-getwd()
 
-# PSA don't use setwd() -> not reproducible!
-# Use Rprojects & set your paths relative to 'project root' (aka '.') where your .Rproj file lives.
 
-# open a project, sets wd at the project root
-here::here() == getwd()
 
-# here::here is a helper to get the absolute path
-here::here('...some_path/to/files')
 
-# ^ especially useful when code is running elsewhere, eg. live on a server, or with a collaborator.
 
-# lets download all those excels but
-# we want ensure our destination directory
-# exists first!
-destdir <- 'data/messy_excels/'
-if (!dir.exists(destdir)) {
-  dir.create(destdir, recursive = T)
-}
 
-# to download the excels...
-# 1. create the destination file paths
-# 2. fix the urls - they have the bad quotes
-#
-datasets |>
-  mutate(
-    # fix the urls
-    url = str_remove_all(url, '“|”'),
-    # url = str_sub(url, 2L, -2L),
-    dest = str_glue('{destdir}{dataset}.xlsx'),
-    download = map2_lgl(url, dest, download.file)
-    ) |>
-  glimpse()
+
+
+
 
