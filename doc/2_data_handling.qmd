@@ -1,5 +1,5 @@
 ---
-title: "Seminar II: Data handling"
+title: "Seminar II:<br>Data Handling"
 subtitle: "Learn to Code 2023"
 author: "Jason Moggridge"
 format: 
@@ -17,28 +17,19 @@ execute:
 
 Last week, we did data visualizations with `ggplot2`.
 
-This week we'll check out other `tidyverse` packages that help with data wrangling and cleaning.
+This week we'll check out other `tidyverse` packages that help with data wrangling and cleaning, especially `dplyr`!
 
-::: incremental
--   `dplyr` for transforming tables
--   `tidyr` for reshaping tables
--   `purrr` for operations on lists
--   `readr` for I/O operations
-:::
 
 ## What's data
 
 <hr>
 
-**Data** usually refers to some collection of information (values or labels) that describe attributes (variables) of entities (observations)
+**Data** usually refers to some collection of information (*values or labels*) that describe attributes (*variables*) of entities (*observations*)
 
 ## Tidy data
 <hr>
 
-![](./public/tidy-1.png){width="900"}
-
 is easy to work with because...
-
 
 ::: incremental
 -   each variable is a column,\
@@ -46,11 +37,12 @@ is easy to work with because...
 -   and each type of observational unit is a table.
 :::
 
-###### *Reproduced from https://r4ds.had.co.nz* 
+## Tidy Data
+<hr>
+![*Reproduced from https://r4ds.had.co.nz*](./public/tidy-1.png){width="900"}
 
 
-## Tidyverse API
-
+## dplyr API
 <hr>
 
 -   dataframe (tibble) is the central data structure.\
@@ -63,17 +55,21 @@ is easy to work with because...
 
 ```{r eval=F}
 # do this once
-install.packages('tidyverse', 'janitor')
+install.packages('tidyverse')
+library(tidyverse)
+sw <- dplyr::starwars
 ```
 
 ## More Resources
 
 <hr/>
 
+[**github repo for the seminars**](https://github.com/MichaelFralickLab/LearnToCode2023)
+
+[**completed script from today**](https://github.com/MichaelFralickLab/LearnToCode2023/blob/main/R/2a_data_handling.R)
+
 [**dplyr documentation**: https://dplyr.tidyverse.org/articles/dplyr.html](https://dplyr.tidyverse.org/articles/dplyr.html)
 
 [**R for Data Science** : https://r4ds.had.co.nz](https://r4ds.had.co.nz) 👌
+Chapters 5-13
 
-Posit...
-
-Swirl

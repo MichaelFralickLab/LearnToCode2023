@@ -98,6 +98,22 @@ sw |>
   mutate(height_mass_prod = height * mass) |> 
   glimpse()
 
+# functions that you might use within mutate:
+# (not exhaustive!) 
+# math: + - * / ^ %/% %% 
+# transformations with math: log, sqrt
+# cumulative math
+# rankings, percentiles... 
+# lead() & lag() to get a value from other rows
+# boolean algebra:  ! & |  xor(x, y)
+# inequality: < <= == >= > 
+# string ops with stringr::str_*/
+
+sw |> 
+  select(name, height) |> 
+  mutate(lag_height = lag(height),
+         delta = height - lag_height)
+
 # `mutate(across(cols, fns))` does multiple cols & fns
 sw |>
   mutate(

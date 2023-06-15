@@ -75,8 +75,9 @@ library(tidyverse)
 # `pivot_longer` -> turn column names into values
 # `pivot_wider` -> turn values into column names
 
-
 # `left_join` -> keeps all rows in left
 # `right_join` -> keeps all rows in right
 # `full_join` -> keeps all rows in both
 # `anti_join` -> keeps all rows not in left
+
+# `nest` and `unnnest` multiple values in list columns
