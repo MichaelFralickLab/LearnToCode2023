@@ -89,7 +89,7 @@ pima |> count(diabetes)
 
 It's recommended to take a look at each variable to understand it's distribution.
 
-```{r eda, fig.width=8, fig.height=4}
+```{r eda, fig.width=8, fig.height=5}
 pima |> 
   pivot_longer(-diabetes) |> 
   ggplot(aes(diabetes, value, 
@@ -98,10 +98,10 @@ pima |>
   geom_violin(na.rm = T, alpha = 0.05) +
   ggbeeswarm::geom_beeswarm(
     size = .01, 
-    alpha = .21, 
+    alpha = .25, 
     na.rm = T
   ) + 
-  facet_wrap(~name, scales = 'free') +
+  facet_wrap(~name, scales = 'free', nrow = 2) +
   theme(
     axis.title = element_blank(),
     axis.text.x = element_blank(), 
@@ -110,13 +110,14 @@ pima |>
 
 ```
 
+
 ----------------------------------------------------
 
 ## GLM for Inference
 
 Let's fit a logistic regression with all the variables, so we can examine the relationship between these and the outcome. We'll just omit the subjects with missing data for now (one option but issues..., *discuss*).
 
-```{r}
+```{r glm}
 # fit logistic regression with glm; '.' is everything; binom for LR
 # formula = outcome ~ x1 + x2 ...
 mod <- glm(formula = diabetes ~ ., 
@@ -127,9 +128,12 @@ mod <- glm(formula = diabetes ~ .,
 summary(mod)
 ```
 
-`broom` is great for working with linear models.
+-----
 
-```{r}
+### Tidy Linear Models with `broom`
+
+
+```{r broom}
 # extracting parameter estimates (log-odds ratios)
 broom::tidy(mod)
 
@@ -159,7 +163,7 @@ rm(mod)
 First, we **split** the data (randomly) and save some for **testing** after we've tuned our models. Then, we create **resamples** of our training data so we can perform many performance trials for **hyperparameter tuning**. There are many ways to resample, but the most common is repeated 10-fold **cross-validation** (CV). Other methods include leave-one-out CV (LOOCV) and bootstrapping.
 
 
-```{r}
+```{r split}
 # synchronize the random number sequence for reproducibility
 set.seed(1234)
 
@@ -192,7 +196,7 @@ To prevent **data leakage**, we want pre-processing to also be 'trained' only on
 
 `recipes` is a great way to declare what pre-processing steps will occur for each fold during model evaluation. Here we perform normalization, then imputation using 5-nearest neighbours.
 
-```{r}
+```{r recipe}
 pima_recipe <- 
   recipe(formula = diabetes ~ .,  data = pima_train) |> 
   step_normalize(all_numeric_predictors()) |> 
@@ -202,15 +206,15 @@ pima_recipe <-
 
 ---------------------------------------
 
-### Hyperparameters and grid search
+### Hyperparameters and grid search 
 
 Now let's pick a couple models and set them up for **hyperparameter tuning** by CV. 
 
-We'll do an elastic net logistic regression (mix of LASSO and Ridge regression) with `glmnet` and we'll compare that against the more powerful `xgboost` algorithm, which uses an ensemble of many decision trees (basically).
+We'll do an elastic net logistic regression (mix of LASSO and Ridge regression) with `glmnet` and we'll compare that against the more powerful `ranger` algorithm (random foresst), which uses an ensemble of many decision trees (basically).
 
 Hyperparameters are model parameters that control the learning process, and these cannot be learned from the data (we have to do it empirically).
 
-```{r}
+```{r glmnet spec}
 # glmnet does logistic regression with regularization 
 # regularization shrinks the model coefficients
 # modulate regularization with hyperparameters
@@ -221,36 +225,22 @@ glmnet_spec <- logistic_reg(
   penalty = tune(), 
   mixture = tune()
 )
-
-# create a grid of HP settings to evaluate
-glmnet_grid <- grid_regular(
-  penalty(), 
-  mixture(),  
-  levels = 12
-)
 ```
 
 
 
 ![Lasso and Ridge shrinkage](../doc/public/L1_and_L2_balls.svg.png){style="background-color: #efefef;"}
 
-There's a table `parsnip::model_db` with all the models you can use.
-If you want to find out what hyperparameters are available for each model, query this table and `unnest` the parameters column.
+--------
 
-```{r}
-# what xgboost hyperparameters can be tuned??
-parsnip::model_db |> 
-  filter(mode == 'classification', engine == 'ranger') |> 
-  unnest(parameters) |>
-  select(parameter)
-```
+### Random Forest
 
 ![](https://upload.wikimedia.org/wikipedia/commons/7/76/Random_forest_diagram_complete.png)
 
 We'll specify a **Random Forest** classifier (multi-tree ensemble) and mark the number of predictors to sample (mtry) and minimum n for node splitting (min_n) for tuning. These HPs define how the decision trees in the ensemble are created.
 
-```{r}
-# xgboost is complicated... an ensemble of decision trees
+```{r rf spec}
+# ranger
 ranger_spec <- rand_forest(
   mode = 'classification', 
   engine = 'ranger', 
@@ -258,19 +248,32 @@ ranger_spec <- rand_forest(
   min_n = tune(),
 )
 
-# a grid of hyperparameter tunings for xgb; there are many different hp.s
-ranger_grid <- grid_regular(
-  mtry(range = c(4,8)), 
-  min_n(), 
-  tree_depth(), 
-  levels = 10
-)
 ```
+
+-------
+
+
+### Hyperparameters for any model
+
+There's a table `parsnip::model_db` with all the models you can use.
+If you want to find out what hyperparameters are available for each model, query this table and `unnest` the parameters column.
+
+```{r parsnip models}
+# what hyperparameters can be tuned??
+parsnip::model_db |> 
+  filter(mode == 'classification', engine == 'ranger') |> 
+  unnest(parameters) |>
+  select(parameter)
+```
+
+------
+
+### Workflows
 
 We can then combine our preprocessing steps and model specification into a `workflow` object that is easy to apply to our CV splits.
 
-```{r}
-glm_wf <- 
+```{r workflows}
+glmnet_wf <- 
   workflow() |> 
   add_model(glmnet_spec) |> 
   add_recipe(pima_recipe)
@@ -282,26 +285,40 @@ ranger_wf <-
 
 ```
 
+------
+
+
+### Classification Performance Metrics
 
 Time to select how we want to evaluate our model performance...
 `yardstick` has tons of different metrics for evaluating classification and regression models. We'll use some common ones, and my fav Matthew's Correlation Coefficient (mcc).
 
-```{r message=F, warning=F}
+```{r metric set, message=F, warning=F}
 # these metrics all come from yardstick:: 
-cv_mets <- metric_set(mcc, roc_auc, accuracy, sens, spec)
+metrix <- metric_set(mcc, roc_auc, accuracy, sens, spec)
 ```
+
+
+-------
 
 ## Do CV
 
 `tune_grid` performs two loops - one loop over all the folds for CV, and one over all the hyperparameter settings that need to be evaluated within each fold. We pass it our cv object with the splits, the grid of hyperparameter settings, and the metrics we want to compute.
 
-```{r message=F, warning=F}
+```{r glmnet cv, message=F, warning=F}
+# create a grid of HP settings to evaluate
+glmnet_grid <- grid_regular(
+  dials::penalty(), 
+  dials::mixture(),  
+  levels = 10
+)
+
 # perform fit a model for each comb. of hyperparameters 
-rs_glmnet <- tune::tune_grid(
-  wf_glmnet,
+glmnet_cv <- tune::tune_grid(
+  glmnet_wf,
   resamples = pima_folds, 
-  grid = grid_glmnet,
-  metrics = cv_mets,
+  grid = glmnet_grid,
+  metrics = metrix,
   control = tune::control_grid(parallel_over = 'resamples')
 )
 
@@ -310,18 +327,18 @@ beepr::beep()
 ```
 
 
-```{r}
+```{r glmnet cv rs}
 # check out the results...
-rs_glmnet |> collect_metrics(summarize = T)
+glmnet_cv |> collect_metrics(summarize = T)
 
 # select 'the best' model based on some metric
-rs_glmnet |> select_best(metric = 'mcc')
-rs_glmnet |> select_best(metric = 'roc_auc')
+glmnet_cv |> select_best(metric = 'mcc')
+glmnet_cv |> select_best(metric = 'roc_auc')
 
 # generally want to choose the simplest model
 # that doesn't perform significantly worse than
 # the best one! 
-best_glmnet <- rs_glmnet |> 
+glmnet_best <- glmnet_cv |> 
   select_by_one_std_err(
     desc(penalty),
     metric = 'mcc'
@@ -330,19 +347,26 @@ best_glmnet <- rs_glmnet |>
 
 `autoplot` will visualize performance across different settings. 
 
-```{r}
-autoplot(rs_glmnet)
+```{r glmnet cv plot}
+autoplot(glmnet_cv)
 ```
 
-Let's do the CV with our xgb model now.
+Let's do the CV with our Ranger model now,
 
-```{r}
-# do cv for xgboost 
-rs_xgb <- tune_grid(
-  wf_xgb,
+```{r ranger cv}
+# a grid of hyperparameter tunings for ranger
+ranger_grid <- grid_regular(
+  mtry(range = c(2,8)), 
+  min_n(), 
+  levels = 20
+)
+
+# do cv for rf 
+ranger_cv <- tune_grid(
+  ranger_wf,
   resamples = pima_folds, 
-  grid = grid_xgboost,
-  metrics = cv_mets,
+  grid = ranger_grid,
+  metrics = metrix,
   control = tune::control_grid(parallel_over = 'resamples')
 )
 
@@ -351,25 +375,29 @@ beepr::beep()
 
 and inspect MCC across settings,
 
-```{r}
-autoplot(rs_xgb, metric = 'mcc')
+```{r plot ranger}
+autoplot(ranger_cv)
 ```
 
-```{r}
+and pick the 'best' settings.
+
+```{r ranger best}
 # pick 'best' model that minimizes (tree_depth) 
-best_xgb <- select_by_one_std_err(
-  rs_xgb, 
-  tree_depth, mtry, min_n, 
+ranger_best <- select_by_one_std_err(
+  ranger_cv, 
+  mtry, min_n, 
   metric = 'mcc'
 )
 ```
-## Compare MCC performance from CV resampling for two models
 
-```{r}
-bind_rows(
-  best_glmnet, 
-  best_xgb
-  )
+
+
+------
+
+### Compare performance from CV resampling for two models
+
+```{r compare cv}
+bind_rows(glmnet_best, ranger_best)
 ```
 
 ---------
@@ -380,46 +408,29 @@ Time to fight the final boss, i.e. to fit our selected the models on the full tr
 
 `finalize_workflow` extracts our favourite model + hyperparameters, then `last_fit` fits the model on the training part of the initial split and predicts the testing portion. We use `collect_metrics` to get the metrics that were computed from the predictions vs. actual values.
 
-```{r}
-# select final workflow, fit on train, and predict test 
-final_glmnet <- 
-  wf_glmnet |> 
-  finalize_workflow(parameters = best_glmnet) |> 
-  last_fit(split = pima_split,
-           metrics = cv_mets) 
-
-# collect final metrics from test set predictions
-test_glmnet <- 
-  final_glmnet |> 
+```{r testing}
+get_test_res <- function(wf, best, name){
+  # select final workflow, fit on train, and predict test 
+  # collect final metrics from test set predictions
+  wf |> 
+  finalize_workflow(parameters = best) |> 
+  last_fit(split = pima_split, metrics = metrix) |> 
   collect_metrics() |> 
-  mutate(algo = 'glmnet', .before = 1)
-print(test_glmnet)
-```
+  mutate(algo = name, .before = 1)
+}
 
-
-```{r}
-# finalize xgb
-final_xgboost <- 
-  wf_xgb |> 
-  finalize_workflow(parameters = best_xgb) |> 
-  last_fit(split = pima_split,
-           metrics = cv_mets)
-
-# collect xgb results
-test_xgboost <- 
-  final_xgboost |> 
-  collect_metrics() |> 
-  mutate(algo = 'xgboost', before = 1)
-```
-
-
-```{r}
 # compare test performance between models
-bind_rows(test_glmnet, test_xgboost) |> 
+test_res <- 
+  bind_rows(
+    get_test_res(glmnet_wf, glmnet_best, 'glmnet'),
+    get_test_res(ranger_wf, ranger_best, 'ranger'),
+  ) |> 
   select(-.estimator, -.config) |> 
-  pivot_wider(names_from = .metric, values_from = .estimate)
+  pivot_wider(names_from = .metric, values_from = .estimate) |> 
+  print()
 ```
 
+**Conclusion**: Our `ranger` model performs better on the test set in terms of MCC (symmetric, balanced), but the `glmnet` model gets a better AUC (*can be misleading*), despite it's poor specificity.
 
 ----------
 
@@ -429,14 +440,16 @@ Find a dataset that interests you on https://kaggle.com, do some exploratory ana
 
 ----------
 
+## Rmarkdown ...
+
 <details>
 
 <summary>Rmarkdown!?: Click to expand</summary>
 
-This is an **Rmarkdown** .Rmd file (or report if looking at html output). I'm writing text here that will appear as prose in the report. Code blocks are wrapped with \`\`\` to tell R to execute those bits. The output will go directly into the report (so cool)! To run all the code contained in this file (as if it were a normal R script) and create the report (.html format in this case), simply *knit* the .Rmd file (with the R package `knitr` which is already tightly integrated into Rstudio - there is a button to 'knit').
+This is an **Rmarkdown** .Rmd file (or, a report if you're looking at the html output). Text written here that will appear as prose in the report. Code blocks are wrapped with \`\`\` to tell R to execute those bits. The output will go directly into the report (so cool)! To run all the code contained in this file (as if it were a normal R script) and create the report (.html format in this case), simply *knit* the .Rmd file (with the R package `knitr` which is already tightly integrated into Rstudio - there is a button to 'knit').
 
 
-```{r}
+```{r info}
 sessionInfo()
 ```
 
